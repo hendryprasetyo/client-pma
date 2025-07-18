@@ -35,10 +35,8 @@ Request.interceptors.response.use(
       }
 
       // Clear local auth state
-      useAuthStore.getState().logout() // pastikan ada `logout()` di store
-      if (process.env.NODE_ENV !== 'production') {
-        document.cookie = '__access_token__=; Max-Age=0; Path=/'
-      }
+      useAuthStore.getState().logout()
+      document.cookie = '__access_token__=; Max-Age=0; Path=/'
       // Optional: Redirect ke login page
       if (typeof window !== 'undefined') {
         window.location.href = '/login'

@@ -41,9 +41,7 @@ const AppSidebar = () => {
     mutationFn: logout,
     onSuccess: () => {
       useAuthStore.getState().logout()
-      if (process.env.NODE_ENV !== 'production') {
-        document.cookie = '__access_token__=; Max-Age=0; Path=/'
-      }
+      document.cookie = '__access_token__=; Max-Age=0; Path=/'
       router.replace('/login')
     },
     onError: (err: { response: { data: TResponseApi<null> } }) => {
