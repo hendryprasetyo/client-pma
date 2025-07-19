@@ -22,6 +22,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import Link from 'next/link'
 import { Settings } from 'lucide-react'
 import { TResponseApi } from '@/types/type'
+import { useRouter } from 'next/navigation'
 
 const STATUS_ORDER = ['todo', 'in-progress', 'done']
 const STATUS_LABEL: Record<string, string> = {
@@ -41,10 +42,12 @@ type DetailProjectProps = {
 
 const DetailProject = ({ projectId }: DetailProjectProps) => {
   const queryClient = useQueryClient()
-  const { data, isPending } = useQuery({
+  const router = useRouter()
+  const { data, isPending, isError } = useQuery({
     queryKey: ['projects', projectId],
     queryFn: () => getDetailProject(projectId),
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
   const project = data?.data
@@ -91,6 +94,24 @@ const DetailProject = ({ projectId }: DetailProjectProps) => {
       }
     },
   })
+
+  const handleDragEnd = (result: DropResult) => {
+    const { destination, source, draggableId } = result
+
+    if (!destination) return
+    if (
+      destination.droppableId === source.droppableId &&
+      destination.index === source.index
+    ) {
+      return
+    }
+
+    updateTaskStatus({
+      taskId: draggableId,
+      projectId,
+      status: destination.droppableId as TStatus,
+    })
+  }
 
   if (isPending) {
     return (
@@ -148,22 +169,9 @@ const DetailProject = ({ projectId }: DetailProjectProps) => {
     )
   }
 
-  const handleDragEnd = (result: DropResult) => {
-    const { destination, source, draggableId } = result
-
-    if (!destination) return
-    if (
-      destination.droppableId === source.droppableId &&
-      destination.index === source.index
-    ) {
-      return
-    }
-
-    updateTaskStatus({
-      taskId: draggableId,
-      projectId,
-      status: destination.droppableId as TStatus,
-    })
+  if (isError) {
+    router.replace('/')
+    return
   }
   return (
     <div className="px-6 md:px-12 py-10 space-y-10">

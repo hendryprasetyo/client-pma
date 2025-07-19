@@ -1,7 +1,12 @@
 'use client'
 
 import { useQuery, useMutation } from '@tanstack/react-query'
-import { getDetailProject, getUsers, updateProject } from '@/service/Projects'
+import {
+  deleteProject,
+  getDetailProject,
+  getUsers,
+  updateProject,
+} from '@/service/Projects'
 import { useState, useEffect } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -15,15 +20,29 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import ProjectSettingsSkeleton from './ProjectSettingsSkeleton'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Loader2 } from 'lucide-react'
+import { TResponseApi } from '@/types/type'
+import { useRouter } from 'next/navigation'
 
 type ProjectSettingsProps = {
   projectId: string
 }
 
 const ProjectSettings = ({ projectId }: ProjectSettingsProps) => {
-  const { data, isPending } = useQuery({
+  const router = useRouter()
+  const { data, isPending, isError } = useQuery({
     queryKey: ['projects', projectId],
     queryFn: () => getDetailProject(projectId),
+    retry: false,
   })
 
   const { data: users } = useQuery({
@@ -33,6 +52,7 @@ const ProjectSettings = ({ projectId }: ProjectSettingsProps) => {
 
   const project = data?.data
 
+  const [openDelete, setOpenDelete] = useState(false)
   const [name, setName] = useState('')
   const [members, setMembers] = useState<
     { id: string; name: string; email: string }[]
@@ -87,10 +107,29 @@ const ProjectSettings = ({ projectId }: ProjectSettingsProps) => {
     })
   }
 
+  const { mutate: mutateDeleteProject, isPending: isPendingDelete } =
+    useMutation({
+      mutationFn: () => deleteProject(projectId),
+      onSuccess: () => {
+        toast.success('Project deleted!')
+        router.replace('/')
+      },
+      onError: (err: { response: { data: TResponseApi<null> } }) => {
+        toast.error(err.response?.data?.message ?? 'Delete Failed')
+      },
+      onSettled: () => {
+        setOpenDelete(false)
+      },
+    })
+
   if (isPending) {
     return <ProjectSettingsSkeleton />
   }
 
+  if (isError) {
+    router.replace('/')
+    return
+  }
   return (
     <div className="max-w-2xl mx-auto px-6 py-10 space-y-8">
       <h1 className="text-2xl font-bold text-blue-900">Project Settings</h1>
@@ -147,8 +186,43 @@ const ProjectSettings = ({ projectId }: ProjectSettingsProps) => {
 
       <Separator />
 
-      <div className="text-right">
-        <Button onClick={handleSave} className="px-6" disabled={isUpdating}>
+      <div className="text-right flex justify-between items-center w-full gap-4">
+        <Dialog open={openDelete} onOpenChange={setOpenDelete}>
+          <DialogTrigger asChild>
+            <Button variant="destructive" className="w-max cursor-pointer">
+              Delete Project
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Confirmation</DialogTitle>
+            </DialogHeader>
+            <DialogDescription>
+              Are you sure you want to Delete this project?
+            </DialogDescription>
+            <DialogFooter className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setOpenDelete(false)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => {
+                  mutateDeleteProject()
+                }}
+              >
+                {isPendingDelete ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : null}
+                Confirm
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+        <Button
+          type="button"
+          onClick={handleSave}
+          className="px-6"
+          disabled={isUpdating}
+        >
           {isUpdating ? 'Saving...' : 'Save Changes'}
         </Button>
       </div>

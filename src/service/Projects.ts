@@ -160,3 +160,10 @@ export const getMembers = async (projectId: string) => {
   )
   return data
 }
+
+export const deleteProject = async (projectId: string) => {
+  const { data } = await Request.delete<TResponseApi<null>>(
+    `/api/projects/${projectId}`
+  )
+  return data
+}

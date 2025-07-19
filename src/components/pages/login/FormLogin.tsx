@@ -42,9 +42,7 @@ const FormLogin = () => {
       try {
         const userRes = await userProfile(userId)
         useAuthStore.getState().setUser(userRes.data)
-        if (process.env.NODE_ENV !== 'production') {
-          document.cookie = `__access_token__=${token}; Path=/; Secure; SameSite=Lax`
-        }
+        document.cookie = `__access_token__=${token}; Path=/; Secure; SameSite=None`
         form.reset()
         toast.success('Login success')
         router.replace('/')

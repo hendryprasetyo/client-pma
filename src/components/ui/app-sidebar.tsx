@@ -37,7 +37,7 @@ const AppSidebar = () => {
   const pathname = usePathname()
   const router = useRouter()
   const [showDialog, setShowDialog] = useState(false)
-  const { mutate: mutateLogin, isPending } = useMutation({
+  const { mutate: mutateLogout, isPending } = useMutation({
     mutationFn: logout,
     onSuccess: () => {
       useAuthStore.getState().logout()
@@ -45,8 +45,9 @@ const AppSidebar = () => {
       router.replace('/login')
     },
     onError: (err: { response: { data: TResponseApi<null> } }) => {
-      toast.error(err.response?.data?.message ?? 'Login failed')
+      toast.error(err.response?.data?.message ?? 'Logout failed')
     },
+    onSettled: () => setShowDialog(false),
   })
 
   return (
@@ -129,8 +130,7 @@ const AppSidebar = () => {
                 </Button>
                 <Button
                   onClick={() => {
-                    setShowDialog(false)
-                    mutateLogin()
+                    mutateLogout()
                   }}
                 >
                   {isPending ? (
