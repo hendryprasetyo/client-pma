@@ -19,7 +19,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
-import { createTask, getUsers } from '@/service/Projects'
+import { createTask, getMembers } from '@/service/Projects'
 import {
   Select,
   SelectTrigger,
@@ -37,8 +37,8 @@ const AddTaskDialog = ({ projectId, defaultStatus }: Props) => {
   const [open, setOpen] = useState(false)
 
   const { data: userList, isPending: isLoadingUsers } = useQuery({
-    queryKey: ['users'],
-    queryFn: getUsers,
+    queryKey: ['members'],
+    queryFn: () => getMembers(projectId),
     enabled: open,
   })
 

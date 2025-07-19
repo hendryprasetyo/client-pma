@@ -153,3 +153,10 @@ export const getUsers = async () => {
   )
   return data
 }
+
+export const getMembers = async (projectId: string) => {
+  const { data } = await Request.get<TResponseApi<TUsersResponse[]>>(
+    `/api/projects/members/${projectId}`
+  )
+  return data
+}
